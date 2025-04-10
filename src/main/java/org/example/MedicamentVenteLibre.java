@@ -1,4 +1,6 @@
-package org.example;
+package com.pharmacie.model;
+
+import org.json.JSONObject;
 
 public class MedicamentVenteLibre extends Medicament {
     private String description;
@@ -9,6 +11,24 @@ public class MedicamentVenteLibre extends Medicament {
     }
 
     public String getDescription() { return description; }
+
+    @Override
+    public JSONObject toJSONObject() {
+        JSONObject jsonObject = super.toJSONObject();
+        jsonObject.put("type", "VL");
+        jsonObject.put("description", description);
+        return jsonObject;
+    }
+
+    public static MedicamentVenteLibre fromJSONObject(JSONObject jsonObject) {
+        return new MedicamentVenteLibre(
+                jsonObject.getString("nom"),
+                jsonObject.getString("code"),
+                jsonObject.getDouble("prix"),
+                jsonObject.getInt("stock"),
+                jsonObject.getString("description")
+        );
+    }
 
     @Override
     public String toString() {

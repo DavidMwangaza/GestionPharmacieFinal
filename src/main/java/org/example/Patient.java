@@ -1,4 +1,6 @@
-package org.example;
+package com.pharmacie.model;
+
+import org.json.JSONObject;
 
 public class Patient {
     private String nom;
@@ -17,6 +19,24 @@ public class Patient {
     public String getPrenom() { return prenom; }
     public String getAdresse() { return adresse; }
     public int getNumeroSecuriteSociale() { return numeroSecuriteSociale; }
+
+    public JSONObject toJSONObject() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("nom", nom);
+        jsonObject.put("prenom", prenom);
+        jsonObject.put("adresse", adresse);
+        jsonObject.put("nss", numeroSecuriteSociale);
+        return jsonObject;
+    }
+
+    public static Patient fromJSONObject(JSONObject jsonObject) {
+        return new Patient(
+                jsonObject.getString("nom"),
+                jsonObject.getString("prenom"),
+                jsonObject.getString("adresse"),
+                jsonObject.getInt("nss")
+        );
+    }
 
     @Override
     public String toString() {

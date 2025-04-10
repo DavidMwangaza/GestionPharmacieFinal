@@ -1,8 +1,6 @@
-package org.example;
+package com.pharmacie.model;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import org.json.JSONObject;
 
 public class Medicament {
     private String nom;
@@ -22,6 +20,25 @@ public class Medicament {
     public double getPrix() { return prix; }
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
+
+    public JSONObject toJSONObject() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("nom", nom);
+        jsonObject.put("code", code);
+        jsonObject.put("prix", prix);
+        jsonObject.put("stock", stock);
+        jsonObject.put("type", "BASE");
+        return jsonObject;
+    }
+
+    public static Medicament fromJSONObject(JSONObject jsonObject) {
+        return new Medicament(
+                jsonObject.getString("nom"),
+                jsonObject.getString("code"),
+                jsonObject.getDouble("prix"),
+                jsonObject.getInt("stock")
+        );
+    }
 
     @Override
     public String toString() {

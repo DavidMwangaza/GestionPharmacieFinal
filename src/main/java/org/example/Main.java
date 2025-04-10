@@ -1,10 +1,13 @@
-package org.example;
+package com.pharmacie;
 
-import org.example.Fournisseur;
-import org.example.Medicament;
-import org.example.Patient;
-import org.example.Vente;
+import com.pharmacie.model.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -17,10 +20,13 @@ public class Main {
     private static List<Vente> ventes = new ArrayList<>();
     private static int nextVenteId = 1;
 
+    private static final String DATA_FILE = "pharmacie_data.json";
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
         System.out.println("Bienvenue dans l'application de gestion de pharmacie !");
+
+        loadData(); // Charger les données au démarrage
 
         int choix;
         do {
@@ -38,7 +44,10 @@ public class Main {
                 case 6: afficherFournisseurs(); break;
                 case 7: enregistrerVente(); break;
                 case 8: afficherVentes(); break;
-                case 0: System.out.println("Merci d'avoir utilisé l'application !"); break;
+                case 0:
+                    saveData(); // Sauvegarder les données avant de quitter
+                    System.out.println("Merci d'avoir utilisé l'application !");
+                    break;
                 default: System.out.println("Choix invalide. Veuillez réessayer.");
             }
             System.out.println();
@@ -120,11 +129,10 @@ public class Main {
         System.out.println("Patient ajouté avec succès !");
     }
 
-    private static void afficherPatients() {
-        if (patients.isEmpty()) {
-            System.out.println("Aucun patient enregistré.");
-            return;
-        }
+    private static void afficherPatients() {if (patients.isEmpty()) {
+        System.out.println("Aucun patient enregistré.");
+        return;
+    }
         System.out.println("--- Liste des patients ---");
         for (Patient patient : patients) {
             System.out.println(patient);
@@ -229,6 +237,91 @@ public class Main {
         System.out.println("--- Liste des ventes ---");
         for (Vente vente : ventes) {
             System.out.println(vente);
+        }
+    }
+
+    private static void loadData() {
+        try {
+            String content = new String(Files.readAllBytes(Paths.get(DATA_FILE)));
+            JSONObject root = new JSONObject(content);
+
+            // Charger les médicaments
+            JSONArray medicamentsArray = root.getJSONArray("medicaments");
+            for (int i = 0; i < medicamentsArray.length(); i++) {
+                JSONObject medicamentObj = medicamentsArray.getJSONObject(i);
+                String type = medicamentObj.getString("type");
+                if (type.equals("VL")) {
+                    medicaments.add(MedicamentVenteLibre.fromJSONObject(medicamentObj));
+                } else if (type.equals("ORD")) {
+                    medicaments.add(MedicamentOrdonnance.fromJSONObject(medicamentObj));
+                } else {
+                    medicaments.add(Medicament.fromJSONObject(medicamentObj));
+                }
+            }
+
+            // Charger les patients
+            JSONArray patientsArray = root.getJSONArray("patients");
+            for (int i = 0; i < patientsArray.length(); i++) {
+                JSONObject patientObj = patientsArray.getJSONObject(i);
+                patients.add(Patient.fromJSONObject(patientObj));
+            }
+
+            // Charger les fournisseurs
+            JSONArray fournisseursArray = root.getJSONArray("fournisseurs");
+            for (int i = 0; i < fournisseursArray.length(); i++) {
+                JSONObject fournisseurObj = fournisseursArray.getJSONObject(i);
+                fournisseurs.add(Fournisseur.fromJSONObject(fournisseurObj));
+            }
+
+            // Charger les ventes
+            JSONArray ventesArray = root.getJSONArray("ventes");
+            for (int i = 0; i < ventesArray.length(); i++) {
+                JSONObject venteObj = ventesArray.getJSONObject(i);
+                ventes.add(Vente.fromJSONObject(venteObj, medicaments, patients));
+                if (venteObj.getInt("idVente") >= nextVenteId) {
+                    nextVenteId = venteObj.getInt("idVente") + 1;
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Erreur lors du chargement des données : " + e.getMessage());
+            // Si le fichier n'existe pas, on commence avec des listes vides
+        } catch (org.json.JSONException e) {
+            System.out.println("Erreur lors de la lecture du fichier JSON : " + e.getMessage());
+        }
+    }
+
+    private static void saveData() {
+        JSONObject root = new JSONObject();
+        JSONArray medicamentsArray = new JSONArray();
+        for (Medicament medicament : medicaments) {
+            medicamentsArray.put(medicament.toJSONObject());
+        }
+        root.put("medicaments", medicamentsArray);
+
+        JSONArray patientsArray = new JSONArray();
+        for (Patient patient : patients) {
+            patientsArray.put(patient.toJSONObject());
+        }
+        root.put("patients", patientsArray);
+
+        JSONArray fournisseursArray = new JSONArray();
+        for (Fournisseur fournisseur : fournisseurs) {
+            fournisseursArray.put(fournisseur.toJSONObject());
+        }
+        root.put("fournisseurs", fournisseursArray);
+
+        JSONArray ventesArray = new JSONArray();
+        for (Vente vente : ventes) {
+            ventesArray.put(vente.toJSONObject());
+        }
+        root.put("ventes", ventesArray);
+
+        try (FileWriter file = new FileWriter(DATA_FILE)) {
+            file.write(root.toString(4)); // Indentation pour une meilleure lisibilité
+            System.out.println("Données sauvegardées avec succès dans " + DATA_FILE);
+        } catch (IOException e) {
+            System.out.println("Erreur lors de la sauvegarde des données : " + e.getMessage());
         }
     }
 }

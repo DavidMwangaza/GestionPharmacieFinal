@@ -1,0 +1,13 @@
+{
+    "medicaments": [{
+        "code": "12",
+        "prix": 100,
+        "description": "POUR LA TETE",
+        "stock": 1234,
+        "type": "VL",
+        "nom": "IBUCAP"
+    }],
+    "patients": [],
+    "ventes": [],
+    "fournisseurs": []
+}

@@ -28,4 +28,3 @@ public class Medicament {
         return "Nom: " + nom + ", Code: " + code + ", Prix: " + prix + ", Stock: " + stock;
     }
 }
-
